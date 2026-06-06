@@ -1,9 +1,9 @@
-# app.py - JOBLIB VERSION (100% Working)
+# app.py - Load model langsung dari Google Drive
 import streamlit as st
-import joblib
+import pickle
+import requests
 import numpy as np
-import json
-import os
+from sklearn.preprocessing import LabelEncoder
 
 st.set_page_config(
     page_title="⚽ Player Value Predictor",
@@ -14,47 +14,43 @@ st.set_page_config(
 st.title("⚽ Football Player Market Value Predictor")
 st.caption("ML model trained on real player data from Kaggle")
 
+# ============================================================
+# LOAD MODEL FROM GOOGLE DRIVE
+# ============================================================
+
 @st.cache_resource
-def load_model():
-    """Load model using joblib"""
+def load_model_from_drive():
+    """Load model from Google Drive using direct download link"""
+    
+    FILE_ID = "1oCRt4TUlgqzGyx236v0MzU5-khRvvS_1"  # YOUR FILE ID
+    DIRECT_LINK = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+    
     try:
-        # Cek apakah file ada
-        required_files = ['best_model.joblib', 'le_position.joblib', 
-                         'le_sub_position.joblib', 'le_foot.joblib', 
-                         'scaler.joblib', 'metadata.json']
+        # Download file dari Drive
+        response = requests.get(DIRECT_LINK)
         
-        missing = [f for f in required_files if not os.path.exists(f)]
-        if missing:
-            st.error(f"Missing files: {missing}")
-            return None
+        # Handle Google Drive warning page
+        if 'download_warning' in response.text:
+            import re
+            confirm_token = re.search('confirm=([^&]+)', response.text)
+            if confirm_token:
+                confirm = confirm_token.group(1)
+                DIRECT_LINK = f"https://drive.google.com/uc?export=download&confirm={confirm}&id={FILE_ID}"
+                response = requests.get(DIRECT_LINK)
         
-        model = joblib.load('best_model.joblib')
-        le_position = joblib.load('le_position.joblib')
-        le_sub_position = joblib.load('le_sub_position.joblib')
-        le_foot = joblib.load('le_foot.joblib')
-        scaler = joblib.load('scaler.joblib')
+        # Load pickle
+        artifacts = pickle.loads(response.content)
         
-        with open('metadata.json', 'r') as f:
-            metadata = json.load(f)
+        st.success(f"✅ Model loaded: {artifacts['model_name']}")
+        return artifacts
         
-        st.success(f"✅ Model loaded: {metadata['model_name']}")
-        
-        return {
-            "model": model,
-            "model_name": metadata['model_name'],
-            "le_position": le_position,
-            "le_sub_position": le_sub_position,
-            "le_foot": le_foot,
-            "scaler": scaler,
-            "features": metadata['features'],
-            "metrics": metadata['metrics']
-        }
     except Exception as e:
-        st.error(f"Error loading model: {e}")
+        st.error(f"Failed to load model from Drive: {e}")
+        st.info("Make sure the file is shared as 'Anyone with the link'")
         return None
 
 # Load model
-artifacts = load_model()
+artifacts = load_model_from_drive()
 
 if artifacts:
     model = artifacts["model"]
@@ -138,4 +134,4 @@ if artifacts:
     st.divider()
     st.caption("Built with 🐍 Streamlit | Model trained on Kaggle player dataset")
 else:
-    st.warning("⚠️ Model not loaded. Please check that all files are uploaded.")
+    st.warning("⚠️ Model not loaded. Please check Google Drive link is correct and file is shared.")
