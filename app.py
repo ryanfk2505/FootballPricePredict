@@ -22,7 +22,7 @@ st.caption("ML model trained on real player data from Kaggle")
 def load_model_from_drive():
     """Load model from Google Drive using gdown"""
     
-    FILE_ID = "1oCRt4TUlgqzGyx236v0MzU5-khRvvS_1"
+    FILE_ID = "1pvUBeUMsvqBfW4V61fgBFr_MlGl2PhqX"
     FILE_PATH = "player_value_model.pkl"
     
     try:
