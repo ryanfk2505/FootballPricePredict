@@ -1,9 +1,9 @@
-# app.py - Load model langsung dari Google Drive
+# app.py - Load model dari Google Drive dengan gdown
 import streamlit as st
 import pickle
-import requests
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
+import gdown
+import os
 
 st.set_page_config(
     page_title="⚽ Player Value Predictor",
@@ -15,33 +15,30 @@ st.title("⚽ Football Player Market Value Predictor")
 st.caption("ML model trained on real player data from Kaggle")
 
 # ============================================================
-# LOAD MODEL FROM GOOGLE DRIVE
+# LOAD MODEL FROM GOOGLE DRIVE USING GDOWN
 # ============================================================
 
 @st.cache_resource
 def load_model_from_drive():
-    """Load model from Google Drive using direct download link"""
+    """Load model from Google Drive using gdown"""
     
-    FILE_ID = "1oCRt4TUlgqzGyx236v0MzU5-khRvvS_1"  # YOUR FILE ID
-    DIRECT_LINK = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+    FILE_ID = "1oCRt4TUlgqzGyx236v0MzU5-khRvvS_1"
+    FILE_PATH = "player_value_model.pkl"
     
     try:
-        # Download file dari Drive
-        response = requests.get(DIRECT_LINK)
-        
-        # Handle Google Drive warning page
-        if 'download_warning' in response.text:
-            import re
-            confirm_token = re.search('confirm=([^&]+)', response.text)
-            if confirm_token:
-                confirm = confirm_token.group(1)
-                DIRECT_LINK = f"https://drive.google.com/uc?export=download&confirm={confirm}&id={FILE_ID}"
-                response = requests.get(DIRECT_LINK)
+        # Download dengan gdown (lebih reliable)
+        url = f"https://drive.google.com/uc?id={FILE_ID}"
+        gdown.download(url, FILE_PATH, quiet=False)
         
         # Load pickle
-        artifacts = pickle.loads(response.content)
+        with open(FILE_PATH, 'rb') as f:
+            artifacts = pickle.load(f)
         
         st.success(f"✅ Model loaded: {artifacts['model_name']}")
+        
+        # Hapus file setelah load (opsional, untuk hemat space)
+        # os.remove(FILE_PATH)
+        
         return artifacts
         
     except Exception as e:
