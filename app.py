@@ -22,7 +22,7 @@ st.caption("ML model trained on real player data from Kaggle")
 def load_model_from_drive():
     """Load model from Google Drive using direct download link"""
     
-    FILE_ID = "1oCRt4TUlgqzGyx236v0MzU5-khRvvS_1"  # YOUR FILE ID
+    FILE_ID = "1MDLz7SL_lYHCk9Zf8hF5EtrAemc0xo8z"  # YOUR FILE ID
     DIRECT_LINK = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
     
     try:
